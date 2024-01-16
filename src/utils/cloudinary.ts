@@ -1,6 +1,6 @@
-import fs from 'fs';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from "cloudinary";
+import { deleteLocalFile } from './localFileOperations';
 
 
 dotenv.config({ path: './.env' })
@@ -29,10 +29,28 @@ const uploadOnCloudinary = async (localFilePath: string, fileName: string) => {
         console.log("File uploaded successfully on cloudinary", response.url);
         return response;
     } catch (error) {
-        console.error(`Failed to upload ${fileName} on Cloudinary `,error);
-        fs.unlinkSync(localFilePath); // Optionally remove the local file from the server
+        console.error(`Failed to upload ${fileName} on Cloudinary `, error);
         return null;
+    } finally {
+        // delete from server
+        deleteLocalFile(localFilePath);
     }
 };
 
-export { uploadOnCloudinary };
+const deleteFromCloudinary = async (publicId: string) => {
+    try {
+        if (!publicId) {
+            console.error(`Could not find public id of the file to delete`);
+            return null;
+        }
+
+        // delete
+        const response = await cloudinary.uploader.destroy(publicId)
+        return response;
+    } catch (error) {
+        console.error(`Failed to delete from Cloudinary `, error);
+    }
+}
+
+export { deleteFromCloudinary, uploadOnCloudinary };
+

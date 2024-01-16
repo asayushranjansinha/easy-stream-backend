@@ -1,20 +1,40 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
-import User from '../models/user.model'
+// Models
+import User from '../models/user.model';
 
-
+// Utilities for handling asynchronous operations
 import { asyncHandler } from "../utils/asyncHandler";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { deleteLocalFile } from '../utils/localFileOperations';
 
-import { ApiResponse } from "../utils/ApiResponse";
+// Cloudinary operations
+import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary";
+
+// Custom error and response handling utilities
 import { ApiError } from "../utils/ApiError";
+import { ApiResponse } from "../utils/ApiResponse";
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
+    // Extracting files information from request
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
     // Extracting user information from request body
     const { username, email, fullname, password } = req.body;
 
+    // Extracting local paths for avatar and cover image
+    const avatarLocalPath = files?.avatar?.[0]?.path;
+    const coverImageLocalPath = files?.coverImage?.[0]?.path;
+
     // Checking if any required field is empty
-    if ([fullname, email, username, password].some((field) => (field?.trim() === ''))) {
+    if ([fullname, email, username, password].some((field) => !field || field.trim() === '')) {
+        // Delete local files
+        if (avatarLocalPath) {
+            deleteLocalFile(avatarLocalPath);
+        }
+        if (coverImageLocalPath) {
+            deleteLocalFile(coverImageLocalPath);
+        }
+
         throw new ApiError(400, "All fields are required");
     }
 
@@ -24,21 +44,20 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (existedUser) {
+        // Delete local files
+        if (avatarLocalPath) {
+            deleteLocalFile(avatarLocalPath);
+        }
+        if (coverImageLocalPath) {
+            deleteLocalFile(coverImageLocalPath);
+        }
         throw new ApiError(409, "User with email or username already exists");
     }
-
-    // Extracting files information from request
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
-    // Extracting local paths for avatar and cover image
-    const avatarLocalPath = files?.avatar?.[0]?.path;
-    const coverImageLocalPath = files?.coverImage?.[0]?.path;
 
     // Checking if avatar local path is available
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar is required");
     }
-    console.log('Avatar Local Path:', avatarLocalPath);
 
     // Uploading avatar and cover image to Cloudinary
     const avatar = await uploadOnCloudinary(avatarLocalPath, "Avatar");
@@ -65,6 +84,9 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 
     // Checking if user creation was successful
     if (!createdUser) {
+        // Delete cloudinary images 
+        await deleteFromCloudinary(avatar.public_id);
+
         throw new ApiError(500, "Something went wrong while registering user");
     }
 
@@ -72,6 +94,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     res.status(201).json({
         ApiResponse: new ApiResponse(200, createdUser, "User registered successfully")
     });
-});
 
-export { registerUser }
+});
+export { registerUser };
+

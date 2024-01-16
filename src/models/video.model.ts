@@ -40,6 +40,6 @@ const videoSchema = new mongoose.Schema({
 
 videoSchema.plugin(mongooseAggregatePaginate)
 
-type Video = InferSchemaType<typeof videoSchema>
-const VideoModel = mongoose.model("Video", videoSchema);
- 
+// type Video = InferSchemaType<typeof videoSchema>
+const Video = mongoose.model("Video", videoSchema);
+export default Video

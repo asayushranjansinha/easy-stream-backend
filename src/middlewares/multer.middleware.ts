@@ -1,12 +1,25 @@
-import multer from 'multer'
+import { Request } from 'express'
+import multer, { FileFilterCallback } from 'multer'
+type DestinationCallback = (error: Error | null, destination: string) => void
+type FileNameCallback = (error: Error | null, filename: string) => void
 
+// cb
 
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './public/temp')
+    destination: (
+        request: Request,
+        file: Express.Multer.File,
+        callback: DestinationCallback
+    ): void => {
+        callback(null, './public/temp')
+
     },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname)
+    filename: (
+        req: Request,
+        file: Express.Multer.File,
+        callback: FileNameCallback
+    ): void => {
+        callback(null, file.originalname)
     }
 })
 

@@ -106,7 +106,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
 
 const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const userId = req.user?._id; // error
+        const userId = req.user?._id;
         if (!userId) {
             throw new ApiError(401, "Unauthorized request")
         }

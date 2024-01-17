@@ -1,9 +1,6 @@
 import { IUser } from "../../src/interfaces/IUser";
-
-declare global {
-    namespace Express {
-        export interface Request {
-            user?: IUser;
-        }
+declare module 'express-serve-static-core' {
+    interface Request {
+        user?: IUser
     }
 }

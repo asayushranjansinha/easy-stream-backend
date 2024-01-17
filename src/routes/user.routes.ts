@@ -1,5 +1,15 @@
+// External libraries
 import { Router } from 'express';
-import { logoutUser, registerUser } from "../controllers/user.controller";
+
+// Controllers
+import {
+    logoutUser,
+    registerUser,
+    loginUser,
+    refreshAccessToken
+} from "../controllers/user.controller";
+
+// Middlewares
 import { upload } from "../middlewares/multer.middleware";
 import { verifyJWT } from "../middlewares/auth.middleware";
 
@@ -7,20 +17,22 @@ import { verifyJWT } from "../middlewares/auth.middleware";
 const router = Router();
 
 router.route("/register").post(
-    upload.fields([
-      {
-        name: "avatar",
-        maxCount: 1,
-      },
-      {
-        name: "coverImage",
-        maxCount: 1,
-      },
-    ]),
-    registerUser
-  );
+  upload.fields([
+    {
+      name: "avatar",
+      maxCount: 1,
+    },
+    {
+      name: "coverImage",
+      maxCount: 1,
+    },
+  ]),
+  registerUser
+);
 
+router.route("/login").post(loginUser)
 
-  //secured routes
-router.route("/logout").post(verifyJWT,  logoutUser)
+//secured routes
+router.route("/logout").post(verifyJWT, logoutUser)
+router.route("/refresh-token").post(refreshAccessToken)
 export default router

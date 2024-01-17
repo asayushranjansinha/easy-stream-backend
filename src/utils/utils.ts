@@ -4,6 +4,7 @@ import { ApiError } from "./ApiError"
 const generateAccessAndRefereshTokens = async (userId: string) => {
     try {
 
+        // Gett
         const user = await UserInstance.findById(userId)
         if (!user) {
             throw new ApiError(401, "unauthorized request")

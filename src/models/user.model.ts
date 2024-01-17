@@ -1,6 +1,7 @@
-import mongoose, { Schema, InferSchemaType } from "mongoose";
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import mongoose, { Schema } from "mongoose";
+import { IUser } from './../interfaces/IUser';
 
 const userSchema = new Schema({
     username: {
@@ -47,7 +48,6 @@ const userSchema = new Schema({
 }, { timestamps: true });
 
 
-// type User = InferSchemaType<typeof userSchema>
 
 // methods
 userSchema.pre("save", async function (next) {
@@ -93,6 +93,6 @@ userSchema.methods.generateRefreshToken = function () {
     );
 }
 // model
-const User = mongoose.model("User", userSchema);
+const UserInstance = mongoose.model<IUser>("User", userSchema);
 
-export default User;
+export default UserInstance;

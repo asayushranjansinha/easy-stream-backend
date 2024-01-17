@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 // Models
-import User from '../models/user.model';
+import UserInstance from '../models/user.model';
 
 // Utilities for handling asynchronous operations
 import { asyncHandler } from "../utils/asyncHandler";
@@ -13,6 +13,10 @@ import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary";
 // Custom error and response handling utilities
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
+
+
+
+
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
     // Extracting files information from request
@@ -39,7 +43,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Checking if a user with the provided email or username already exists
-    const existedUser = await User.findOne({
+    const existedUser = await UserInstance.findOne({
         $or: [{ username }, { email }]
     });
 
@@ -69,7 +73,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Creating a new user with the provided information
-    const user = await User.create({
+    const user = await UserInstance.create({
         username: username.toLowerCase(),
         email: email.toLowerCase(),
         password,
@@ -79,7 +83,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     });
 
     // Fetching the created user excluding sensitive information
-    const createdUser = await User.findById(user._id)
+    const createdUser = await UserInstance.findById(user._id)
         .select("-password -refreshToken");
 
     // Checking if user creation was successful
@@ -96,5 +100,41 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     });
 
 });
-export { registerUser };
+
+
+
+
+const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?._id; // error
+        if (!userId) {
+            throw new ApiError(401, "Unauthorized request")
+        }
+        await UserInstance.findByIdAndUpdate(
+            userId,
+            {
+                $unset: {
+                    refreshToken: 1
+                }
+            },
+            {
+                new: true
+            }
+        );
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        res
+            .status(200)
+            .clearCookie("accessToken", options)
+            .clearCookie("refreshToken", options)
+            .json(new ApiResponse(200, {}, "User logged Out"))
+    } catch (error) {
+
+    }
+})
+export { registerUser, logoutUser };
 

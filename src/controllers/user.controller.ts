@@ -89,7 +89,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     // Checking if user creation was successful
     if (!createdUser) {
         // Delete cloudinary images 
-        await deleteFromCloudinary(avatar.public_id);
+        await deleteFromCloudinary(avatar.url);
 
         throw new ApiError(500, "Something went wrong while registering user");
     }

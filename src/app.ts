@@ -18,6 +18,7 @@ app.use(cookieParser())
 
 // routes import
 import userRouter from './routes/user.routes'
+import videoRouter from './routes/video.routes'
 
 app.get('/', (req, res) => {
     console.log("reached")
@@ -25,5 +26,6 @@ app.get('/', (req, res) => {
 })
 // routes declaration
 app.use('/api/v1/users', userRouter)
+app.use('/api/v1/videos', videoRouter)
 
 export { app }

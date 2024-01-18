@@ -6,9 +6,9 @@ const deleteLocalFile = (localFilePath: string) => {
             return null;
         }
         fs.unlinkSync(localFilePath);
-        console.log(`File deleted successfully: ${localFilePath}`);
+        console.log(`File deleted successfully from server storage: ${localFilePath}`);
     } catch (error) {
-        console.error(`Failed to delete file: ${localFilePath}`, error);
+        console.error(`Failed to delete file from server storage: ${localFilePath}`, error);
     }
 };
 

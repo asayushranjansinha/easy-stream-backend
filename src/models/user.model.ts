@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose, { Schema } from "mongoose";
-import { IUser } from '../interfaces/IUser';
+import { IUser } from '../interfaces/user.interfaces';
 
 const userSchema = new Schema({
     username: {

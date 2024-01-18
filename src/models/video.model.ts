@@ -1,16 +1,8 @@
 import mongoose, { Document, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import { IvideoSchema } from "../interfaces/video.interfaces";
 
-interface IvideoSchema extends Document {
-    videoFile: string;
-    thumbnail: string;
-    title: string;
-    description: string;
-    duration: number;
-    views: number;
-    isPublished: boolean;
-    owner: Schema.Types.ObjectId | null | undefined
-}
+
 const videoSchema = new mongoose.Schema({
     videoFile: {
         type: String,

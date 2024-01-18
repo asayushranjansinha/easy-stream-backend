@@ -10,7 +10,7 @@ export interface VideoQueryParameters {
     creator?: string;
 }
 // Define interface for Video model
-export interface IvideoSchema extends Document {
+export interface IVideo extends Document {
     videoFile: string;
     thumbnail: string;
     title: string;

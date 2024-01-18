@@ -1,12 +1,13 @@
 import { Request, Response } from "express"
-import { VideoQueryParameters } from "../interfaces/video.interfaces"
+import { IVideo, VideoQueryParameters } from "../interfaces/video.interfaces"
 import VideoInstance from "../models/video.model"
 import { ApiError } from "../utils/ApiError"
 import { ApiResponse } from "../utils/ApiResponse"
 import { asyncHandler } from "../utils/asyncHandler"
-import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary"
+import { deleteFromCloudinary, replaceCloudinaryImage, uploadOnCloudinary } from "../utils/cloudinary"
 import { deleteLocalFile } from "../utils/localFileOperations"
 import UserInstance from "../models/user.model"
+import { isValidObjectId } from "mongoose"
 
 
 
@@ -48,7 +49,7 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     const parsedLimit = limit ? parseInt(limit, 10) : 10;
 
     // Aggregation pipeline to fetch videos
-    const videos: any[] = await VideoInstance.aggregate([
+    const videos: IVideo[] = await VideoInstance.aggregate([
         {
             // Stage 1: Match videos based on the provided query conditions
             $match: {
@@ -89,7 +90,6 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     // Send the response with the fetched videos
     res.status(200).json(new ApiResponse(200, videos, "Videos Fetched Successfully"));
 });
-
 
 const publishAVideo = asyncHandler(async (req, res) => {
     // Extracting video information from request body
@@ -133,7 +133,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     // Creating new video with the provided information
     const owner = req.user?.id
-    const publishedVideo = await VideoInstance.create({
+    const publishedVideo: IVideo = await VideoInstance.create({
         owner,
         title: title.trim().toLowerCase(),
         description: description.trim().toLowerCase(),
@@ -159,14 +159,91 @@ const publishAVideo = asyncHandler(async (req, res) => {
 })
 
 const getVideoById = asyncHandler(async (req, res) => {
+    // Extracting videoId from request params
     const { videoId } = req.params
-    //TODO: get video by id
+
+    // Checking if valid videoId
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Request")
+    }
+
+    // Finding video from videoId
+    const video = await VideoInstance.findOne({ _id: videoId })
+    if (!video) {
+        throw new ApiError(404, "Video not found")
+    }
+
+    // Return video as response
+    res.status(200)
+        .json(new ApiResponse(200, video, "Video Fetched Successfully"))
 })
 
 const updateVideo = asyncHandler(async (req, res) => {
+    // Extracting videoId from request params
     const { videoId } = req.params
-    //TODO: update video details like title, description, thumbnail
 
+    // Extracting fields to update from body
+    const { title, description } = req.body;
+
+    // Extracting thumbnail from request files
+    const thumbnailFileLocalPath = req.file?.path;
+
+    // Checking for valid video id
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid Request")
+    }
+
+    // Check if all of the required fields are non-empty
+    if (![thumbnailFileLocalPath, title?.trim(), description?.trim()].every(field => field !== undefined && field !== '')) {
+        throw new ApiError(400, "Update fields are required");
+    }
+
+    // Find Video
+    const video = await VideoInstance.findOne({ _id: videoId })
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+
+    // Check if current user is the owner 
+    const userId = req.user?._id?.toString();
+    const ownerId = video?.owner?.toString();
+
+    if (ownerId !== userId) {
+        throw new ApiError(403, "You do not have permission to edit this video");
+    }
+
+    let thumbnail;
+    if (thumbnailFileLocalPath) {
+        thumbnail = await replaceCloudinaryImage(video.thumbnail, thumbnailFileLocalPath)
+    }
+
+    if (!thumbnail) {
+        throw new ApiError(500, "Error while updating thumbnail")
+    }
+
+
+    const updatedVideo = await VideoInstance.findByIdAndUpdate(
+        videoId,
+        {
+            $set: {
+                title: title || video.title,
+                description: description || video.description,
+                thumbnail: thumbnail?.url || video.thumbnail,
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    if (!updatedVideo) {
+        throw new ApiError(500, "Something went wrong while updating video")
+    }
+
+    res.status(200)
+        .json(new ApiResponse(200, video, "Video Updated Successfully"))
 })
 
 const deleteVideo = asyncHandler(async (req, res) => {

@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
-import { IvideoSchema } from "../interfaces/video.interfaces";
+import { IVideo } from "../interfaces/video.interfaces";
 
 
 const videoSchema = new mongoose.Schema({
@@ -41,5 +41,5 @@ const videoSchema = new mongoose.Schema({
 
 videoSchema.plugin(mongooseAggregatePaginate)
 
-const VideoInstance = mongoose.model<IvideoSchema>("Video", videoSchema);
+const VideoInstance = mongoose.model<IVideo>("Video", videoSchema);
 export default VideoInstance

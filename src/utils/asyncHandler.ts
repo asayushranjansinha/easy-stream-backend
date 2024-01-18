@@ -8,8 +8,14 @@ type AsyncFunction = (
 
 const asyncHandler = (requestHandler: AsyncFunction) => {
     return (req: Request, res: Response, next: NextFunction) => {
-        Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err))
+        // Wrap the asynchronous function and handle promise rejections
+        Promise.resolve(requestHandler(req, res, next)).catch((err) => {
+            // Log the error (adjust based on your logging strategy)
+            console.error("AsyncHandler Error:", err);
+            // Forward the error to Express's next function
+            next(err);
+        });
     };
-};
+}
 
 export { asyncHandler };

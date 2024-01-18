@@ -2,7 +2,7 @@ import mongoose, { Schema, Types } from "mongoose";
 import { Document } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
-interface IvideoSchema {
+interface IvideoSchema extends Document {
     videoFile: string;
     thumbnail: string;
     title: string;
@@ -10,7 +10,7 @@ interface IvideoSchema {
     duration: number;
     views: number;
     isPublished: boolean;
-    owner: Types.ObjectId | string
+    owner?: Schema.Types.ObjectId | null | undefined // todo:might change in future
 }
 const videoSchema = new mongoose.Schema({
     videoFile: {
@@ -42,7 +42,7 @@ const videoSchema = new mongoose.Schema({
         default: true
     },
     owner: {
-        type: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId, // todo:might change in future
         ref: "User"
     }
 }, { timestamps: true })
@@ -50,5 +50,5 @@ const videoSchema = new mongoose.Schema({
 
 videoSchema.plugin(mongooseAggregatePaginate)
 
-const Video = mongoose.model<IvideoSchema & Document>("Video", videoSchema);
-export default Video
+const VideoInstance = mongoose.model<IvideoSchema>("Video", videoSchema);
+export default VideoInstance

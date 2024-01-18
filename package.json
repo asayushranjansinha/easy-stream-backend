@@ -20,6 +20,7 @@
     "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",
     "cloudinary": "^1.41.2",
+    "cloudinary-build-url": "^0.2.4",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -31,6 +32,7 @@
     "node-gyp": "^10.0.1"
   },
   "devDependencies": {
+    "@cld-apis/types": "^0.1.6",
     "@types/cookie-parser": "^1.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

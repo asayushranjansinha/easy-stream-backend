@@ -28,10 +28,11 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     }
     // Check if query is provided, and set the $or operator for title and description search
     if (query) {
-        baseQuery.$or = [
-            { title: { $regex: query, $options: "i" } },
-            { description: { $regex: query, $options: "i" } },
-        ];
+        baseQuery
+            .$or = [
+                { title: { $regex: query, $options: "i" } },
+                { description: { $regex: query, $options: "i" } },
+            ];
     }
 
     // Check if userId is provided
@@ -51,34 +52,63 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     // Aggregation pipeline to fetch videos
     const videos: IVideo[] = await VideoInstance.aggregate([
         {
-            // Stage 1: Match videos based on the provided query conditions
+            // Stage 1: $match stage
             $match: {
+                // Apply a match filter based on the provided baseQuery and isPublished: true
                 ...baseQuery,
                 isPublished: true
             }
         },
         {
+            // Stage 2: $lookup stage for 'users' collection
             $lookup: {
                 from: 'users',
                 localField: 'owner',
                 foreignField: '_id',
                 as: 'owner',
+                pipeline: [
+                    {
+                        // Sub-pipeline for 'users' collection: Project specific fields
+                        $project: {
+                            fullname: 1,
+                            username: 1,
+                            avatar: 1,
+                        }
+                    }
+                ]
             },
         },
         {
-            $unwind: '$owner',
+            // Stage 3: $lookup stage for 'likes' collection
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "likes"
+            }
         },
         {
-            // Stage 2: Sort videos based on the specified sort options
+            // Stage 4: $sort stage based on provided sortOptions
             $sort: sortOptions,
         },
         {
-            // Stage 3: Skip videos based on pagination (page and limit)
+            // Stage 5: $skip stage to skip documents based on pagination
             $skip: (parsedPage - 1) * parsedLimit,
         },
         {
-            // Stage 4: Limit the number of videos per page
+            // Stage 6: $limit stage to limit the number of documents returned
             $limit: parsedLimit,
+        },
+        {
+            // Stage 7: $addFields stage
+            $addFields: {
+                owner: {
+                    $first: "$owner",
+                },
+                likes: {
+                    $size: "$likes"
+                }
+            },
         },
     ]);
 

@@ -8,6 +8,8 @@ import { deleteFromCloudinary, replaceCloudinaryImage, uploadOnCloudinary } from
 import { deleteLocalFile } from "../utils/localFileOperations"
 import UserInstance from "../models/user.model"
 import mongoose, { isValidObjectId } from "mongoose"
+import { LikeInstance } from "../models/like.model"
+import { CommentInstance } from "../models/comment.model"
 
 
 
@@ -121,7 +123,7 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     res.status(200).json(new ApiResponse(200, videos, "Videos Fetched Successfully"));
 });
 
-const publishAVideo = asyncHandler(async (req, res) => {
+const publishAVideo = asyncHandler(async (req: Request, res: Response) => {
     // Extracting video information from request body
     const { title, description, isPublished } = req.body
 
@@ -188,16 +190,14 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 })
 
-const getVideoById = asyncHandler(async (req, res) => {
+const getVideoById = asyncHandler(async (req: Request, res: Response) => {
     // Extracting videoId from request params
     const { videoId } = req.params
 
     // Checking if valid videoId
-    // Checking if valid videoId
     if (!isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid videoId. Must be a valid ObjectId.");
     }
-
 
     // Finding video from videoId
     const video = await VideoInstance.aggregate([
@@ -244,7 +244,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     ]);
 
 
-    // Now 'video' contains the updated document with incremented 'views' field
+    // Checking if video is recieved or not
     if (!video || !video.length) {
         throw new ApiError(404, "Video not found")
     }
@@ -260,7 +260,7 @@ const getVideoById = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, video[0], "Video Fetched Successfully"))
 })
 
-const updateVideo = asyncHandler(async (req, res) => {
+const updateVideo = asyncHandler(async (req: Request, res: Response) => {
     // Extracting videoId from request params
     const { videoId } = req.params
 
@@ -328,13 +328,98 @@ const updateVideo = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, video, "Video Updated Successfully"))
 })
 
-const deleteVideo = asyncHandler(async (req, res) => {
+const deleteVideo = asyncHandler(async (req: Request, res: Response) => {
+    // Extracting videoId from request params
     const { videoId } = req.params
-    //TODO: delete video
+
+    // Checking if valid videoId
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId. Must be a valid ObjectId.");
+    }
+
+    // Find Video
+    const video = await VideoInstance.findOne({ _id: videoId })
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    // Check if current user is the owner 
+    const userId = req.user?._id?.toString();
+    const ownerId = video?.owner?.toString();
+
+    if (ownerId !== userId) {
+        throw new ApiError(403, "You do not have permission to delete this video");
+    }
+
+    // Deleting video from database and Cloudinary
+    const deletedVideo = await VideoInstance.findByIdAndDelete(videoId);
+
+    if (!deletedVideo) {
+        throw new ApiError(500, "Something went wrong while deleting video")
+    }
+
+    const response = await Promise.all([
+        // Delete all 'Like' documents associated with the deleted video
+        LikeInstance.deleteMany({ video: deletedVideo._id }),
+
+        // Delete all 'Comment' documents associated with the deleted video
+        CommentInstance.deleteMany({ video: deletedVideo._id }),
+
+        // Delete the video file from Cloudinary using its public ID
+        deleteFromCloudinary(deletedVideo.thumbnail),
+
+        // Delete the thumbnail file from Cloudinary using its public ID
+        deleteFromCloudinary(deletedVideo.videoFile),
+    ]);
+
+    // Check if 
+    if (!response) {
+        throw new ApiError(500, "Something went wrong while deleting video")
+    }
+
+    // Returning server response
+    res.status(200)
+        .json(new ApiResponse(200, {}, "Video Deleted Successfully"))
+
 })
 
-const togglePublishStatus = asyncHandler(async (req, res) => {
+const togglePublishStatus = asyncHandler(async (req: Request, res: Response) => {
+    // Extracting videoId from request params
     const { videoId } = req.params
+
+    // Checking if valid videoId
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId. Must be a valid ObjectId.");
+    }
+
+    // Find Video
+    const video = await VideoInstance.findOne({ _id: videoId })
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    // Check if current user is the owner 
+    const userId = req.user?._id?.toString();
+    const ownerId = video?.owner?.toString();
+
+    if (ownerId !== userId) {
+        throw new ApiError(403, "You do not have permission to delete this video");
+    }
+
+    // Toggle video publish status
+    video.isPublished = !video.isPublished
+    video.save();
+
+    res.status(200)
+        .json(
+            new ApiResponse(
+                200,
+                video,
+                video.isPublished ? "Video is Public now" : "Video is Private now"
+            )
+        )
 })
 
 export {

@@ -1,12 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 
-type AsyncFunction = (
+export type AsyncFunction<T> = (
     req: Request,
     res: Response,
     next: NextFunction
-) => Promise<void>;  
+) => Promise<T>;
 
-const asyncHandler = (requestHandler: AsyncFunction) => {
+const asyncHandler = <T>(requestHandler: AsyncFunction<T>) => {
     return (req: Request, res: Response, next: NextFunction) => {
         // Wrap the asynchronous function and handle promise rejections
         Promise.resolve(requestHandler(req, res, next)).catch((err) => {

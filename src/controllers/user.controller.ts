@@ -5,7 +5,7 @@ import UserInstance from '../models/user.model';
 
 // Utilities for handling asynchronous operations
 import jwt from "jsonwebtoken";
-import { asyncHandler } from "../utils/asyncHandler";
+import { AsyncFunction, asyncHandler } from "../utils/asyncHandler";
 import { deleteLocalFile } from '../utils/localFileOperations';
 
 // Cloudinary operations
@@ -95,7 +95,7 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Sending a success response with the created user information
-    res.status(201)
+    return res.status(201)
         .json(new ApiResponse(200, createdUser, "User registered successfully"));
 
 })
@@ -130,7 +130,7 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
         secure: true
     }
 
-    res
+    return res
         .status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
@@ -166,7 +166,7 @@ const logoutUser = asyncHandler(async (req: Request, res: Response) => {
             secure: true
         }
 
-        res
+        return res
             .status(200)
             .clearCookie("accessToken", options)
             .clearCookie("refreshToken", options)
@@ -207,7 +207,7 @@ const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
 
         const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
 
-        res
+        return res
             .status(200)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
@@ -243,7 +243,7 @@ const changeCurrentPassword = asyncHandler(async (req: Request, res: Response) =
         user.password = newPassword;
         user.save({ validateBeforeSave: false })
 
-        res.status(200)
+        return res.status(200)
             .json(new ApiResponse(200, {}, "Password changed successfully"))
     } catch (error) {
 
@@ -253,7 +253,7 @@ const changeCurrentPassword = asyncHandler(async (req: Request, res: Response) =
 
 const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
     const currentUser = req.user;
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, currentUser, "Current User"))
 })
 
@@ -277,7 +277,7 @@ const updateAccountDetails = asyncHandler(async (req: Request, res: Response) =>
         }
     ).select("-password -refreshToken")
 
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, user, "User profile updated successfully"))
 })
 
@@ -312,7 +312,7 @@ const updateUserAvatar = asyncHandler(async (req: Request, res: Response) => {
     )
         .select("-password -refreshToken")
 
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, user, "Avatar changed successfully"))
 })
 
@@ -348,7 +348,7 @@ const updateUserCoverImage = asyncHandler(async (req: Request, res: Response) =>
     )
         .select("-password -refreshToken")
 
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, user, "Avatar changed successfully"))
 })
 
@@ -424,7 +424,7 @@ const getUserChannelProfile = asyncHandler(async (req: Request, res: Response) =
     }
 
     // Send the channel profile information in the response
-    res.status(200).json(
+    return res.status(200).json(
         new ApiResponse(200, channel[0], "Channel Profile info fetched successfully")
     );
 });
@@ -472,7 +472,7 @@ const getUserWatchHistory = asyncHandler(async (req: Request, res: Response) => 
         }
     ])
 
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, user[0].watchHistory, "Watch History fetched successfully"))
 })
 export {

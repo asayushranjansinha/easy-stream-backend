@@ -120,7 +120,7 @@ const getAllVideos = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Send the response with the fetched videos
-    res.status(200).json(new ApiResponse(200, videos, "Videos Fetched Successfully"));
+    return res.status(200).json(new ApiResponse(200, videos, "Videos Fetched Successfully"));
 });
 
 const publishAVideo = asyncHandler(async (req: Request, res: Response) => {
@@ -185,7 +185,7 @@ const publishAVideo = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Sending success response with created with video information
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, publishedVideo, "Video Published Successfully"))
 
 })
@@ -256,7 +256,7 @@ const getVideoById = asyncHandler(async (req: Request, res: Response) => {
     });
 
     // Return video as response
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, video[0], "Video Fetched Successfully"))
 })
 
@@ -324,7 +324,7 @@ const updateVideo = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(500, "Something went wrong while updating video")
     }
 
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, video, "Video Updated Successfully"))
 })
 
@@ -379,7 +379,7 @@ const deleteVideo = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Returning server response
-    res.status(200)
+    return res.status(200)
         .json(new ApiResponse(200, {}, "Video Deleted Successfully"))
 
 })
@@ -412,7 +412,8 @@ const togglePublishStatus = asyncHandler(async (req: Request, res: Response) => 
     video.isPublished = !video.isPublished
     video.save();
 
-    res.status(200)
+    // Sending response as json
+    return res.status(200)
         .json(
             new ApiResponse(
                 200,

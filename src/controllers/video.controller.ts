@@ -7,7 +7,7 @@ import { asyncHandler } from "../utils/asyncHandler"
 import { deleteFromCloudinary, replaceCloudinaryImage, uploadOnCloudinary } from "../utils/cloudinary"
 import { deleteLocalFile } from "../utils/localFileOperations"
 import UserInstance from "../models/user.model"
-import { isValidObjectId } from "mongoose"
+import mongoose, { isValidObjectId } from "mongoose"
 
 
 
@@ -193,19 +193,71 @@ const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params
 
     // Checking if valid videoId
+    // Checking if valid videoId
     if (!isValidObjectId(videoId)) {
-        throw new ApiError(400, "Invalid Request")
+        throw new ApiError(400, "Invalid videoId. Must be a valid ObjectId.");
     }
 
+
     // Finding video from videoId
-    const video = await VideoInstance.findOne({ _id: videoId })
-    if (!video) {
+    const video = await VideoInstance.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                    {
+                        $project: {
+                            fullname: 1,
+                            username: 1,
+                            avatar: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "likes"
+            }
+        },
+        {
+            $addFields: {
+                owner: {
+                    $first: "$owner",
+                },
+                likes: {
+                    $size: "$likes",
+                },
+            }
+        }
+    ]);
+
+
+    // Now 'video' contains the updated document with incremented 'views' field
+    if (!video || !video.length) {
         throw new ApiError(404, "Video not found")
     }
+    // Update views on the video
+    await VideoInstance.findByIdAndUpdate(videoId, {
+        $set: {
+            views: video[0].views + 1,
+        },
+    });
 
     // Return video as response
     res.status(200)
-        .json(new ApiResponse(200, video, "Video Fetched Successfully"))
+        .json(new ApiResponse(200, video[0], "Video Fetched Successfully"))
 })
 
 const updateVideo = asyncHandler(async (req, res) => {

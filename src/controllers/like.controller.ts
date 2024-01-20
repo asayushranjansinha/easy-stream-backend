@@ -58,6 +58,9 @@ const getLikedVideos = asyncHandler(async (req: Request, res: Response) => {
         // Stage 1: Match documents where likedBy field is equal to userId
         {
             $match: {
+                video: {
+                    $exists: true,
+                },
                 likedBy: userId,
             }
         },
@@ -120,7 +123,6 @@ const getLikedVideos = asyncHandler(async (req: Request, res: Response) => {
             }
         }
     ]);
-
 
     // Sending the response
     return res.status(200)

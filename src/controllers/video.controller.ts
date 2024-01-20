@@ -351,29 +351,24 @@ const deleteVideo = asyncHandler(async (req: Request, res: Response) => {
     if (ownerId !== userId) {
         throw new ApiError(403, "You do not have permission to delete this video");
     }
-
-    // Deleting video from database and Cloudinary
-    const deletedVideo = await VideoInstance.findByIdAndDelete(videoId);
-
-    if (!deletedVideo) {
-        throw new ApiError(500, "Something went wrong while deleting video")
-    }
-
+    
     const response = await Promise.all([
+        // Deleting video from database 
+        VideoInstance.findByIdAndDelete(video._id),
+
         // Delete all 'Like' documents associated with the deleted video
-        LikeInstance.deleteMany({ video: deletedVideo._id }),
+        LikeInstance.deleteMany({ video: video._id }),
 
         // Delete all 'Comment' documents associated with the deleted video
-        CommentInstance.deleteMany({ video: deletedVideo._id }),
+        CommentInstance.deleteMany({ video: video._id }),
 
         // Delete the video file from Cloudinary using its public ID
-        deleteFromCloudinary(deletedVideo.thumbnail),
+        deleteFromCloudinary(video.thumbnail),
 
         // Delete the thumbnail file from Cloudinary using its public ID
-        deleteFromCloudinary(deletedVideo.videoFile),
+        deleteFromCloudinary(video.videoFile),
     ]);
 
-    // Check if 
     if (!response) {
         throw new ApiError(500, "Something went wrong while deleting video")
     }

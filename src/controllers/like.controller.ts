@@ -71,8 +71,35 @@ const toggleCommentLike = asyncHandler(async (req: Request, res: Response) => {
 })
 
 const toggleTweetLike = asyncHandler(async (req: Request, res: Response) => {
+    // Extracting tweet from request params
     const { tweetId } = req.params
-    //TODO: toggle like on tweet
+
+    // Checking if valid commentId
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "Invalid Request");
+    }
+
+    // Find if tweet already liked
+    const isLikedTweet = await LikeInstance.find({
+        tweet: tweetId,
+        likedBy: req.user?._id
+    })
+
+    // Toggle like status and send response
+    if (isLikedTweet.length) {
+        await LikeInstance.findByIdAndDelete(isLikedTweet[0]._id)
+
+        return res.status(200).
+            json(new ApiResponse(200, {}, "Removed like from Tweet"))
+    } else {
+        await LikeInstance.create({
+            tweet: tweetId,
+            likedBy: req.user?._id
+        })
+
+        return res.status(200)
+            .json(new ApiResponse(200, {}, "Liked"))
+    }
 }
 )
 

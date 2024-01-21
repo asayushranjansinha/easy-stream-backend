@@ -23,6 +23,7 @@ import likeRouter from './routes/like.routes'
 import commentRouter from './routes/comment.routes'
 import tweetRouter from './routes/tweet.routes'
 import subscriptionRouter from './routes/subscription.routes'
+import playlistRouter from './routes/playlist.routes'
 
 app.get('/', (req, res) => {
     console.log("reached")
@@ -35,5 +36,6 @@ app.use("/api/v1/likes", likeRouter)
 app.use("/api/v1/comments", commentRouter)
 app.use("/api/v1/tweets", tweetRouter)
 app.use("/api/v1/subscriptions", subscriptionRouter)
+app.use("/api/v1/playlists/", playlistRouter)
 
 export { app }

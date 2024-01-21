@@ -4,8 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse"
 import { asyncHandler } from "../utils/asyncHandler"
 import UserInstance from "../models/user.model"
 import { SubscriptionInstance } from "../models/subscription.model"
+import { Request, Response } from "express"
 
-const toggleSubscription = asyncHandler(async (req, res) => {
+const toggleSubscription = asyncHandler(async (req:Request, res:Response) => {
     // Extractign channel id from request parameter
     const { channelId } = req.params
 
@@ -42,7 +43,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 })
 
 // controller to return subscriber list of a channel
-const getUserChannelSubscribers = asyncHandler(async (req, res) => {
+const getUserChannelSubscribers = asyncHandler(async (req:Request, res:Response) => {
     // Extractign channel id from request parameter
     const { channelId } = req.params
 
@@ -97,7 +98,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
 })
 
 // controller to return channel list to which user has subscribed
-const getSubscribedChannels = asyncHandler(async (req, res) => {
+const getSubscribedChannels = asyncHandler(async (req:Request, res:Response) => {
     // Extractign channel id from request parameter
     const { channelId } = req.params
 

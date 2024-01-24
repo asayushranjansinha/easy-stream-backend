@@ -30,7 +30,6 @@ const createPlaylist = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json(new ApiResponse(200, createdPlaylist, "Playlist Created Successfully"));
 });
 
-
 const getUserPlaylists = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?._id
 
@@ -91,8 +90,6 @@ const getUserPlaylists = asyncHandler(async (req: Request, res: Response) => {
         .status(200)
         .json(new ApiResponse(200, playlist, "Playlist Fetched Successfully"));
 });
-
-
 
 const getPlaylistById = asyncHandler(async (req: Request, res: Response) => {
     const { playlistId } = req.params;
@@ -264,7 +261,6 @@ const removeVideoFromPlaylist = asyncHandler(async (req: Request, res: Response)
         .json(new ApiResponse(200, updatedPlaylist, "Video removed from playlist"));
 });
 
-
 const deletePlaylist = asyncHandler(async (req: Request, res: Response) => {
     const { playlistId } = req.params;
 
@@ -298,7 +294,6 @@ const deletePlaylist = asyncHandler(async (req: Request, res: Response) => {
         .status(200)
         .json(new ApiResponse(200, {}, "Playlist Deleted Successfully"));
 });
-
 
 const updatePlaylist = asyncHandler(async (req: Request, res: Response) => {
     const { playlistId } = req.params;
